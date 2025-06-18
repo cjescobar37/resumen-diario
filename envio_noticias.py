@@ -66,7 +66,10 @@ print("\n📰 Resumen generado:\n")
 print(resumen)
 
 # ✉️ Preparar y enviar email con plantilla HTML y estilos básicos
-html_template = f"""
+# Preparar el contenido HTML del resumen para evitar problemas con backslash en f-string
+resumen_html = resumen.replace('\n\n', '</p><p>').replace('\n', '<br>')
+
+html_template = """
 <html>
 <head>
   <meta charset="UTF-8" />
@@ -115,9 +118,9 @@ html_template = f"""
 </head>
 <body>
   <div class="container">
-    <h1>🗞️ Boletín Informativo Diario - {fecha_actual}</h1>
+    <h1>🗞️ Boletín Informativo Diario - {fecha}</h1>
     <div>
-      {resumen.replace('\n\n', '</p><p>').replace('\n', '<br>')}
+      <p>{contenido}</p>
     </div>
     <div class="footer">
       <p>Este boletín es generado automáticamente.</p>
@@ -125,7 +128,7 @@ html_template = f"""
   </div>
 </body>
 </html>
-"""
+""".format(fecha=fecha_actual, contenido=resumen_html)
 
 msg = MIMEText(html_template, "html", "utf-8")
 msg["Subject"] = ASUNTO
