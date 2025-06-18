@@ -50,7 +50,7 @@ def obtener_resumen():
         try:
             print(f"Probando con modelo: {modelo}")
             response = client.chat.completions.create(
-                model=model,
+                model=modelo,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=1500,
                 temperature=0.7,
