@@ -4,6 +4,8 @@ from email.mime.text import MIMEText
 from datetime import datetime
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
+import traceback
+
 
 # 📤 Configuración del correo
 DESTINATARIOS = ["cjescobar37@gmail.com", "cristian.escobar@bancodelapampa.com.ar"]
@@ -14,7 +16,10 @@ ASUNTO = f"Resumen Diario de Noticias - {datetime.now().strftime('%d/%m/%Y')}"
 # 🧠 Configuración de OpenAI
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
+if not OPENAI_API_KEY:
+    print("❌ No se encontró la clave API de OpenAI en las variables de entorno.")
+else:
+    print("✅ Clave API de OpenAI recibida correctamente.")
 # 🧾 Prompt para ChatGPT
 prompt = """
 Generame un resumen diario de noticias separadas por secciones, con prioridad a Argentina y especialmente a Santa Rosa (La Pampa), con un estilo de boletín diario informativo, claro y concreto.
@@ -52,7 +57,8 @@ def obtener_resumen():
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Error con {modelo}: {str(e)}")
+            print(f"Error con {modelo}: {e}")
+            traceback.print_exc()  # <<=== muestra más detalles del error
     return "No se pudo generar el resumen con ningún modelo."
 
 # ✨ Llamar a la función que obtiene el resumen
