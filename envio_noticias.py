@@ -33,6 +33,8 @@ msg["Subject"] = ASUNTO
 msg["From"] = REMITENTE
 msg["To"] = ", ".join(DESTINATARIOS)
 
+print("Iniciando envío de resumen diario...")
+
 # Enviar
 try:
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
@@ -41,3 +43,5 @@ try:
     print("Correo enviado con éxito.")
 except Exception as e:
     print(f"Error al enviar correo: {e}")
+    
+print("Termino envío de resumen diario...")
