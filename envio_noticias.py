@@ -55,8 +55,15 @@ def obtener_resumen():
             print(f"Error con {modelo}: {str(e)}")
     return "No se pudo generar el resumen con ningún modelo."
 
-    
+# ✨ Llamar a la función que obtiene el resumen
+resumen = obtener_resumen()
+
+# ✨ Imprimir resumen 
+print("\n📰 Resumen generado:\n")
+print(resumen)
+
 # ✉️ Enviar el correo
+
 msg = MIMEText(resumen, "plain", "utf-8")
 msg["Subject"] = ASUNTO
 msg["From"] = REMITENTE
