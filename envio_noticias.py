@@ -35,7 +35,7 @@ msg["To"] = ", ".join(DESTINATARIOS)
 
 # Enviar
 try:
-    with smtplib.SMTP_SSL("smtp.gmail.com", 487) as server:
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(REMITENTE, CLAVE_APP)
         server.sendmail(REMITENTE, DESTINATARIOS, msg.as_string())
     print("Correo enviado con éxito.")
