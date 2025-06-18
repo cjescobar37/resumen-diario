@@ -15,7 +15,7 @@ ASUNTO = f"Resumen Diario de Noticias - {datetime.now().strftime('%d/%m/%Y')}"
 
 # 🧠 Configuración de OpenAI
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key=OPENAI_API_KEY)
 if not OPENAI_API_KEY:
     print("❌ No se encontró la clave API de OpenAI en las variables de entorno.")
 else:
