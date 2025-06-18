@@ -5,7 +5,8 @@ from datetime import datetime
 # Parámetros
 DESTINATARIOS = ["cjescobar37@gmail.com", "cristian.escobar@bancodelapampa.com.ar"]
 REMITENTE = "polyescseguridad@gmail.com"
-CLAVE_APP = "hqjd zgwu xaph iecr"
+import os
+CLAVE_APP = os.environ.get("EMAIL_PASSWORD")
 ASUNTO = f"Resumen Diario de Noticias - {datetime.now().strftime('%d/%m/%Y')}"
 
 # Contenido del resumen (simulado)
