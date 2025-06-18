@@ -1,41 +1,72 @@
+import os
 import smtplib
+import openai
 from email.mime.text import MIMEText
 from datetime import datetime
 
-# Parámetros
+# 📤 Configuración del correo
 DESTINATARIOS = ["cjescobar37@gmail.com", "cristian.escobar@bancodelapampa.com.ar"]
 REMITENTE = "polyescseguridad@gmail.com"
-import os
 CLAVE_APP = os.environ.get("EMAIL_PASSWORD")
 ASUNTO = f"Resumen Diario de Noticias - {datetime.now().strftime('%d/%m/%Y')}"
 
-# Contenido del resumen (simulado)
-resumen = """
-📰 Resumen Diario de Noticias - Argentina, Santa Rosa (La Pampa) y el Mundo
+# 🧠 Configuración de OpenAI
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+openai.api_key = OPENAI_API_KEY
 
-🇦🇷 Argentina:
-- Política: El Gobierno debate nuevas medidas fiscales.
-- Tecnología: Una startup argentina crea un sensor IoT para el agro.
-- Inversiones: Dólar MEP sube a $1240. Bonos en alza.
-- Deportes: River venció 2-1 a San Lorenzo y lidera.
-- Música: Wos anuncia show en Rosario.
-- Eventos en Santa Rosa: Feria del Libro en el CMC (18 al 22 junio), obra "La Mentira" en Teatro Español.
+# 🧾 Prompt para ChatGPT
+prompt = """
+Generame un resumen diario de noticias separadas por secciones, con prioridad a Argentina y especialmente a Santa Rosa (La Pampa), con un estilo de boletín diario informativo, claro y concreto.
 
-🌎 Internacional:
-- Apple lanza iOS 19 con funciones de IA.
-- Elon Musk presenta robot humanoide de Tesla.
-- Bitcoin rebota a USD 68.000.
+Quiero que organices el contenido en 3 grandes bloques:
+
+---
+
+📍 LOCALES (Santa Rosa, La Pampa)
+- Incluir eventos culturales importantes del día o semana: shows, bandas en vivo, obras de teatro, festivales, exposiciones, ferias, actividades públicas o gratuitas.
+- Para cada evento indicá: nombre, lugar, fecha, hora, precio y si hay venta anticipada o entradas online.
+- También incluí noticias relevantes de Santa Rosa o La Pampa si las hay (clima extremo, obras, transporte, sucesos importantes, visitas destacadas, etc.).
+
+---
+
+🇦🇷 NACIONALES (Argentina)
+- Deportes: novedades de River Plate con prioridad, y cualquier suceso deportivo nacional relevante.
+- Tecnología/Informática: innovaciones, lanzamientos o desarrollos argentinos destacados.
+- Inversiones en Argentina: qué conviene seguir hoy (dólar, bonos, acciones, fintech, etc.).
+- Breve resumen político/económico si hay algo importante hoy.
+- Música argentina o espectáculos nacionales de interés general.
+
+---
+
+🌍 INTERNACIONALES
+- Foco en innovaciones tecnológicas, nuevos inventos, avances científicos o ideas aplicables a la realidad argentina en informática o sistemas.
+- También incluí 2 o 3 titulares globales relevantes de política, conflictos o economía si vale la pena saber.
+- Muy breve y útil.
+
+---
+
+El resultado debe ser ordenado, simple de leer, como si fuera un informe que quiero recibir todas las mañanas. Sé claro, escueto y útil.
+
 """
 
-# Crear email
+# 🎯 Obtener respuesta de OpenAI
+try:
+    respuesta = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=1000,
+        temperature=0.7,
+    )
+    resumen = respuesta["choices"][0]["message"]["content"]
+except Exception as e:
+    resumen = f"Error al obtener resumen de OpenAI: {e}"
+
+# ✉️ Enviar el correo
 msg = MIMEText(resumen, "plain", "utf-8")
 msg["Subject"] = ASUNTO
 msg["From"] = REMITENTE
 msg["To"] = ", ".join(DESTINATARIOS)
 
-print("Iniciando envío de resumen diario...")
-
-# Enviar
 try:
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(REMITENTE, CLAVE_APP)
@@ -43,5 +74,4 @@ try:
     print("Correo enviado con éxito.")
 except Exception as e:
     print(f"Error al enviar correo: {e}")
-    
-print("Termino envío de resumen diario...")
+
