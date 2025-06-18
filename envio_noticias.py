@@ -9,7 +9,8 @@ import traceback
 DESTINATARIOS = ["cjescobar37@gmail.com", "cristian.escobar@bancodelapampa.com.ar"]
 REMITENTE = "polyescseguridad@gmail.com"
 CLAVE_APP = os.environ.get("EMAIL_PASSWORD")
-ASUNTO = f"Resumen Diario de Noticias - {datetime.now().strftime('%d/%m/%Y')}"
+fecha_actual = datetime.now().strftime('%d/%m/%Y')
+ASUNTO = f"Resumen Diario de Noticias - {fecha_actual}"
 
 # 🧠 Configuración de Gemini
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -19,29 +20,34 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-# 🧾 Prompt
+# 🧾 Prompt con fecha interpolada usando format()
 prompt = """
-Generame un resumen diario de noticias separadas por secciones, con prioridad a Argentina y especialmente a Santa Rosa (La Pampa), con un estilo de boletín diario informativo, claro y concreto.
+Generá un boletín informativo diario con fecha {fecha} con el siguiente formato y estilo periodístico, con prioridad en eventos de Santa Rosa (La Pampa) y noticias nacionales relevantes para Argentina. Si no hay eventos locales para hoy, buscá en el calendario hasta los próximos 3 meses. El contenido debe ser preciso, claro y dividido por secciones.
 
-Quiero que organices el contenido en 3 grandes bloques:
+Estructura:
+## 🗞️ Boletín Informativo Diario - {fecha}
 
-📍 LOCALES (Santa Rosa, La Pampa)
-- Incluir eventos culturales importantes del día o semana: shows, bandas en vivo, obras de teatro, festivales, exposiciones, ferias, actividades públicas o gratuitas.
-- Para cada evento indicá: nombre, lugar, fecha, hora, precio y si hay venta anticipada o entradas online.
-- También incluí noticias relevantes de Santa Rosa o La Pampa si las hay (clima extremo, obras, transporte, sucesos importantes, visitas destacadas, etc.).
+📍 LOCALES | Santa Rosa, La Pampa
+🎭 Eventos culturales:
+- Si hay eventos hoy, listarlos con: nombre, lugar, fecha, hora, precio y si hay entradas online o anticipadas.
+- Si no hay eventos hoy, buscá eventos destacados dentro de los próximos 90 días y listalos ordenados por fecha. Si aún no hay, escribir: “No se registran eventos para hoy ni en los próximos días.”
+📰 Noticias relevantes: clima, obras públicas, visitas oficiales, emergencias, etc.
 
-🇦🇷 NACIONALES (Argentina)
-- Deportes: novedades de River Plate con prioridad, y cualquier suceso deportivo nacional relevante.
-- Tecnología/Informática: innovaciones, lanzamientos o desarrollos argentinos destacados.
-- Inversiones en Argentina: qué conviene seguir hoy (dólar, bonos, acciones, fintech, etc.).
-- Breve resumen político/económico si hay algo importante hoy.
-- Música argentina o espectáculos nacionales de interés general.
+🇦🇷 NACIONALES
+⚽ Deportes (River Plate + otro deporte importante)
+💻 Tecnología e informática nacional
+💹 Inversiones: dólar, mercado financiero, fintech (usar datos simulados si no hay reales)
+🏛️ Política/Economía: resumen breve si hay novedades
+🎶 Música / espectáculos: eventos o lanzamientos de interés general
 
 🌍 INTERNACIONALES
-- Foco en innovaciones tecnológicas, nuevos inventos, avances científicos o ideas aplicables a la realidad argentina en informática o sistemas.
-- También incluí 2 o 3 titulares globales relevantes de política, conflictos o economía si vale la pena saber.
-- Muy breve y útil.
-"""
+🚀 Innovaciones tecnológicas con utilidad para Argentina
+🌐 Noticias globales importantes (máx 3 titulares)
+
+Terminá con una nota aclaratoria: “Este boletín es generado automáticamente.”
+
+Usá un tono informativo, claro y ordenado.
+""".format(fecha=fecha_actual)
 
 # 🎯 Obtener el resumen desde Gemini
 def obtener_resumen():
@@ -59,8 +65,69 @@ resumen = obtener_resumen()
 print("\n📰 Resumen generado:\n")
 print(resumen)
 
-# ✉️ Preparar y enviar email
-msg = MIMEText(resumen, "plain", "utf-8")
+# ✉️ Preparar y enviar email con plantilla HTML y estilos básicos
+html_template = f"""
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {{
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      padding: 20px;
+    }}
+    .container {{
+      max-width: 700px;
+      background-color: #fff;
+      margin: auto;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }}
+    h1 {{
+      color: #2c3e50;
+      border-bottom: 3px solid #2980b9;
+      padding-bottom: 10px;
+    }}
+    h2 {{
+      color: #2980b9;
+      margin-top: 30px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 6px;
+    }}
+    p, li {{
+      line-height: 1.5;
+      font-size: 14px;
+    }}
+    ul {{
+      padding-left: 20px;
+    }}
+    .footer {{
+      font-size: 12px;
+      color: #999;
+      margin-top: 40px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+      text-align: center;
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗞️ Boletín Informativo Diario - {fecha_actual}</h1>
+    <div>
+      {resumen.replace('\n\n', '</p><p>').replace('\n', '<br>')}
+    </div>
+    <div class="footer">
+      <p>Este boletín es generado automáticamente.</p>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+msg = MIMEText(html_template, "html", "utf-8")
 msg["Subject"] = ASUNTO
 msg["From"] = REMITENTE
 msg["To"] = ", ".join(DESTINATARIOS)
