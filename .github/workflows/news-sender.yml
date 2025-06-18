@@ -2,27 +2,27 @@ name: Enviar Resumen Diario
 
 on:
   schedule:
-    - cron: '0 11 * * *'  # Corre todos los días a las 08:00 AM (Argentina)
-  workflow_dispatch:       # Permite ejecutarlo manualmente
+    - cron: '0 13 * * 1-5'  # Lunes a viernes a las 10:00 AM (ARG = UTC-3)
+  workflow_dispatch:        # Permite ejecución manual desde GitHub
 
 jobs:
-  enviar-mail:
+  generar-y-enviar:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v3
+    - name: 📥 Clonar repositorio
+      uses: actions/checkout@v3
 
-      - name: Configurar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: 🔧 Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      - name: Instalar dependencias
-        run: pip install openai
+    - name: 📦 Instalar dependencias
+      run: pip install google-generativeai
 
-      - name: Ejecutar script
-        env:
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python envio_noticias.py
+    - name: ▶️ Ejecutar script
+      env:
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      run: python envio_noticias.py
