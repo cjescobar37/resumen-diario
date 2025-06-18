@@ -2,7 +2,7 @@ name: Enviar Resumen Diario
 
 on:
   schedule:
-    - cron: '0 13 * * 1-5'  # Lunes a viernes a las 10:00 AM (ARG = UTC-3)
+    - cron: '30 9 * * *'  # Todos los días a las 6:30 AM en Argentina (9:30 UTC)
   workflow_dispatch:        # Permite ejecución manual desde GitHub
 
 jobs:
