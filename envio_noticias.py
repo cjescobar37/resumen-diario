@@ -46,7 +46,7 @@ Quiero que organices el contenido en 3 grandes bloques:
 
 # 🎯 Obtener resumen, primero con GPT-4, luego GPT-3.5 si falla
 def obtener_resumen():
-    for modelo in ["gpt-4", "gpt-3.5-turbo"]:
+    for modelo in ["gpt-3.5-turbo"]:
         try:
             print(f"Probando con modelo: {modelo}")
             response = client.chat.completions.create(
@@ -58,7 +58,7 @@ def obtener_resumen():
             return response.choices[0].message.content
         except Exception as e:
             print(f"Error con {modelo}: {e}")
-            traceback.print_exc()  # <<=== muestra más detalles del error
+            traceback.print_exc()
     return "No se pudo generar el resumen con ningún modelo."
 
 # ✨ Llamar a la función que obtiene el resumen
