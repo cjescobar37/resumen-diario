@@ -13,7 +13,7 @@ ASUNTO = f"Resumen Diario de Noticias - {datetime.now().strftime('%d/%m/%Y')}"
 
 # 🧠 Configuración de OpenAI
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # 🧾 Prompt para ChatGPT
 prompt = """
@@ -52,8 +52,9 @@ def obtener_resumen():
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Error con {modelo}: {str(e)}")  # Muestra el error real
+            print(f"Error con {modelo}: {str(e)}")
     return "No se pudo generar el resumen con ningún modelo."
+
     
 # ✉️ Enviar el correo
 msg = MIMEText(resumen, "plain", "utf-8")
