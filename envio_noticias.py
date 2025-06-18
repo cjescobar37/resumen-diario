@@ -52,12 +52,9 @@ def obtener_resumen():
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Error con {modelo}: {e}")
+            print(f"Error con {modelo}: {str(e)}")  # Muestra el error real
     return "No se pudo generar el resumen con ningún modelo."
-
-# 📄 Obtener el resumen
-resumen = obtener_resumen()
-
+    
 # ✉️ Enviar el correo
 msg = MIMEText(resumen, "plain", "utf-8")
 msg["Subject"] = ASUNTO
