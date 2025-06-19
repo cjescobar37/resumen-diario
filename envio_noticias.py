@@ -6,7 +6,7 @@ import google.generativeai as genai
 import traceback
 
 # 📤 Configuración del correo
-DESTINATARIOS = ["cjescobar37@gmail.com"]
+DESTINATARIOS = "cjescobar37@gmail.com"
 REMITENTE = "polyescseguridad@gmail.com"
 CLAVE_APP = os.environ.get("EMAIL_PASSWORD")
 fecha_actual = datetime.now().strftime('%d/%m/%Y')
