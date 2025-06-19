@@ -1,8 +1,9 @@
 import os
 import smtplib
 from email.mime.text import MIMEText
-from datetime import datetime
+from datetime import datetime, timedelta
 import google.generativeai as genai
+import requests
 import traceback
 
 # 📤 Configuración del correo
@@ -12,20 +13,93 @@ CLAVE_APP = os.environ.get("EMAIL_PASSWORD")
 fecha_actual = datetime.now().strftime('%d/%m/%Y')
 ASUNTO = f"Resumen Diario de Noticias - {fecha_actual}"
 
-# 🧠 Configuración de Gemini
+# 🔑 API Keys
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+NEWS_API_KEY = os.environ.get("NEWS_API_KEY")
+EVENTBRITE_TOKEN = os.environ.get("EVENTBRITE_TOKEN")
+
+# ✅ Verificar API de Gemini
 if not GEMINI_API_KEY:
     print("❌ No se encontró la API Key de Gemini.")
     exit(1)
-
 genai.configure(api_key=GEMINI_API_KEY)
 
-# 🧾 Prompt con fecha interpolada usando format()
-prompt = """
-Generá un boletín informativo diario con fecha {fecha} con el siguiente formato y estilo periodístico, con prioridad en eventos de Santa Rosa (La Pampa) y noticias nacionales relevantes para Argentina. Si no hay eventos locales para hoy, buscá en el calendario hasta los próximos 3 meses. El contenido debe ser preciso, claro y dividido por secciones.
+# 📰 Obtener noticias desde NewsAPI
+def obtener_noticias():
+    if not NEWS_API_KEY:
+        return "No se pudo acceder a noticias reales (falta clave API)."
+
+    try:
+        url = f"https://newsapi.org/v2/top-headlines?country=ar&pageSize=5&apiKey={NEWS_API_KEY}"
+        response = requests.get(url)
+        noticias = response.json().get("articles", [])
+        resultado = ""
+        for noticia in noticias:
+            resultado += f"- {noticia['title']} ({noticia['source']['name']})\n"
+        return resultado.strip()
+    except Exception as e:
+        print("❌ Error al obtener noticias:", e)
+        return "No se pudieron obtener noticias reales."
+
+# 🎭 Obtener eventos culturales desde Eventbrite
+def obtener_eventos_locales():
+    if not EVENTBRITE_TOKEN:
+        return "No se pudo acceder a eventos porque falta la clave de Eventbrite."
+
+    try:
+        hoy = datetime.now().isoformat()
+        dentro_90_dias = (datetime.now() + timedelta(days=90)).isoformat()
+        url = "https://www.eventbriteapi.com/v3/events/search/"
+        params = {
+            "location.address": "Santa Rosa, La Pampa, Argentina",
+            "location.within": "20km",
+            "start_date.range_start": hoy,
+            "start_date.range_end": dentro_90_dias,
+            "sort_by": "date",
+            "expand": "venue"
+        }
+
+        headers = {
+            "Authorization": f"Bearer {EVENTBRITE_TOKEN}"
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+        eventos = response.json().get("events", [])
+
+        if not eventos:
+            return "No se registran eventos para hoy ni en los próximos días."
+
+        resultado = ""
+        for e in eventos[:5]:  # Primeros 5 eventos
+            nombre = e.get("name", {}).get("text", "Sin nombre")
+            lugar = e.get("venue", {}).get("address", {}).get("localized_address_display", "Lugar no disponible")
+            fecha = e.get("start", {}).get("local", "Fecha no disponible")
+            precio = "Consultar"
+            entradas = e.get("url", "Sin enlace")
+            resultado += f"- {nombre} 📍 {lugar} 📅 {fecha[:10]} 🕓 {fecha[11:16]} 🎟️ {precio} 🔗 {entradas}\n"
+
+        return resultado.strip()
+    except Exception as e:
+        print("❌ Error al obtener eventos:", e)
+        return "No se pudieron obtener eventos locales."
+
+# 📦 Combinar datos reales y generar prompt para Gemini
+noticias_arg = obtener_noticias()
+eventos_locales = obtener_eventos_locales()
+
+prompt = f"""
+Hoy es {fecha_actual}.
+
+🔹 Estas son algunas noticias nacionales actuales extraídas de medios reales:
+{noticias_arg}
+
+🔹 Estos son eventos culturales en Santa Rosa:
+{eventos_locales}
+
+Generá un boletín informativo diario con el siguiente formato y estilo periodístico, con prioridad en eventos de Santa Rosa (La Pampa) y noticias nacionales relevantes para Argentina. El contenido debe ser preciso, claro y dividido por secciones.
 
 Estructura:
-## 🗞️ Boletín Informativo Diario - {fecha}
+## 🗞️ Boletín Informativo Diario - {fecha_actual}
 
 📍 LOCALES | Santa Rosa, La Pampa
 🎭 Eventos culturales:
@@ -47,9 +121,9 @@ Estructura:
 Terminá con una nota aclaratoria: “Este boletín es generado automáticamente.”
 
 Usá un tono informativo, claro y ordenado.
-""".format(fecha=fecha_actual)
+"""
 
-# 🎯 Obtener el resumen desde Gemini
+# 🤖 Obtener el resumen generado
 def obtener_resumen():
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")
@@ -60,16 +134,14 @@ def obtener_resumen():
         traceback.print_exc()
         return "No se pudo generar el resumen."
 
-# ✨ Obtener resumen
 resumen = obtener_resumen()
 print("\n📰 Resumen generado:\n")
 print(resumen)
 
-# ✉️ Preparar y enviar email con plantilla HTML y estilos básicos
-# Preparar el contenido HTML del resumen para evitar problemas con backslash en f-string
+# 📧 Preparar contenido HTML
 resumen_html = resumen.replace('\n\n', '</p><p>').replace('\n', '<br>')
 
-html_template = """
+html_template = f"""
 <html>
 <head>
   <meta charset="UTF-8" />
@@ -93,18 +165,9 @@ html_template = """
       border-bottom: 3px solid #2980b9;
       padding-bottom: 10px;
     }}
-    h2 {{
-      color: #2980b9;
-      margin-top: 30px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 6px;
-    }}
     p, li {{
       line-height: 1.5;
       font-size: 14px;
-    }}
-    ul {{
-      padding-left: 20px;
     }}
     .footer {{
       font-size: 12px;
@@ -118,22 +181,21 @@ html_template = """
 </head>
 <body>
   <div class="container">
-    <h1>🗞️ Boletín Informativo Diario - {fecha}</h1>
-    <div>
-      <p>{contenido}</p>
-    </div>
+    <h1>🗞️ Boletín Informativo Diario - {fecha_actual}</h1>
+    <p>{resumen_html}</p>
     <div class="footer">
       <p>Este boletín es generado automáticamente.</p>
     </div>
   </div>
 </body>
 </html>
-""".format(fecha=fecha_actual, contenido=resumen_html)
+"""
 
+# 📤 Enviar email
 msg = MIMEText(html_template, "html", "utf-8")
 msg["Subject"] = ASUNTO
 msg["From"] = REMITENTE
-msg["To"] = ", ".join(DESTINATARIOS)
+msg["To"] = DESTINATARIOS
 
 try:
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
@@ -142,3 +204,4 @@ try:
     print("✅ Correo enviado con éxito.")
 except Exception as e:
     print(f"❌ Error al enviar correo: {e}")
+
