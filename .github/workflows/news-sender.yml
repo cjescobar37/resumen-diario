@@ -2,7 +2,7 @@ name: Enviar Resumen Diario
 
 on:
   schedule:
-    - cron: '30 9 * * *'  # Todos los días a las 6:30 AM en Argentina (9:30 UTC)
+    - cron: '30 9 * * *'  # 6:30 AM hora Argentina (UTC+3)
   workflow_dispatch:        # Permite ejecución manual desde GitHub
 
 jobs:
@@ -19,10 +19,12 @@ jobs:
         python-version: '3.10'
 
     - name: 📦 Instalar dependencias
-      run: pip install google-generativeai
+      run: pip install google-generativeai requests
 
     - name: ▶️ Ejecutar script
       env:
         EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+        EVENTBRITE_TOKEN: ${{ secrets.EVENTBRITE_TOKEN }}
       run: python envio_noticias.py
