@@ -133,6 +133,27 @@ def obtener_eventos():
         errores.append("❌ Error al obtener eventos: " + str(e))
         return "No se pudieron obtener eventos."
 
+
+# 4️⃣ Noticias desde GNews
+def obtener_noticias():
+    print("📰 Obteniendo noticias desde GNews...")
+    GNEWS_API_KEY = os.environ.get("GNEWS_API_KEY")
+    if not GNEWS_API_KEY:
+        return "No se pudo obtener noticias (falta GNEWS_API_KEY)."
+    try:
+        url = f"https://gnews.io/api/v4/top-headlines?lang=es&country=ar&max=5&token={GNEWS_API_KEY}"
+        resp = requests.get(url)
+        print("🔍 Status GNews:", resp.status_code)
+        if resp.status_code != 200:
+            return "No se pudo obtener noticias."
+        data = resp.json().get("articles", [])
+        if not data:
+            return "No se encontraron noticias recientes."
+        return "\n".join(f"- {a['title']} ({a['source']['name']})" for a in data)
+    except Exception as e:
+        return f"No se pudieron obtener noticias: {e}"
+
+
 # 🧩 Recolectar datos
 noticias = obtener_noticias()
 clima = obtener_clima()
