@@ -8,7 +8,7 @@ on:
 jobs:
   generar_y_enviar:
     runs-on: ubuntu-latest
-
+  
     steps:
       - uses: actions/checkout@v3
 
@@ -17,7 +17,9 @@ jobs:
           python-version: '3.10'
 
       - run: pip install google-generativeai requests
-
+      
+      - run: pip install google-generativeai requests beautifulsoup4
+      
       - env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
