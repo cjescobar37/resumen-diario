@@ -26,4 +26,5 @@ jobs:
           NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
           EVENTBRITE_TOKEN: ${{ secrets.EVENTBRITE_TOKEN }}
           OPENWEATHER_KEY: ${{ secrets.OPENWEATHER_KEY }}
+          GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
         run: python envio_noticias.py
